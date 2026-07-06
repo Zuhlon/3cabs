@@ -884,38 +884,38 @@ export default function Page() {
                   <TooltipContent
                     side="bottom"
                     align="end"
-                    className="max-w-[480px] p-0"
+                    className="max-w-[480px] p-0 !bg-white !text-slate-900 border border-slate-200 shadow-lg [&>svg]:hidden"
                   >
                     <div className="px-3 py-2.5">
-                      <div className="text-xs font-semibold text-muted-foreground mb-2">
+                      <div className="text-xs font-semibold text-slate-900 mb-2">
                         {currentSpec.title} vs {baseSpec.title}
                       </div>
                       <div className="space-y-1.5 max-h-[340px] overflow-y-auto">
                         {diffDetails.map((d, idx) => (
                           <div
                             key={idx}
-                            className="rounded-md bg-white border px-2.5 py-2 text-[11px] space-y-1"
+                            className="rounded-md bg-slate-50 border border-slate-200 px-2.5 py-2 text-[11px] space-y-1"
                           >
                             <div className="flex items-center gap-1.5">
                               <span
                                 className={
                                   d.currentVal
                                     ? "inline-block h-2 w-2 rounded-full bg-emerald-500"
-                                    : "inline-block h-2 w-2 rounded-full bg-red-400"
+                                    : "inline-block h-2 w-2 rounded-full bg-red-500"
                                 }
                               />
-                              <span className="font-mono font-medium text-foreground">
+                              <span className="font-mono font-semibold text-slate-900">
                                 {d.label}
                               </span>
-                              <span className="text-muted-foreground ml-auto font-mono">
+                              <span className="text-slate-400 ml-auto font-mono text-[10px]">
                                 {d.category}
                               </span>
                             </div>
-                            <div className="font-mono leading-relaxed">
-                              <span className="text-red-500">− {d.baseLine}</span>
+                            <div className="font-mono leading-relaxed text-slate-800">
+                              <span className="text-red-600 font-medium">− {d.baseLine}</span>
                             </div>
-                            <div className="font-mono leading-relaxed">
-                              <span className="text-emerald-600">+ {d.currentLine}</span>
+                            <div className="font-mono leading-relaxed text-slate-800">
+                              <span className="text-emerald-700 font-medium">+ {d.currentLine}</span>
                             </div>
                           </div>
                         ))}
