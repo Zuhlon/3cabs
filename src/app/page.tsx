@@ -321,131 +321,344 @@ function CollapsibleSection({
   );
 }
 
-// ─── Full Cabinet Preview (composite) ───────────────────────────────────────
+// ─── Full Cabinet Preview (composite of all real widgets) ────────────────────
 
 function FullCabinetPreview() {
   return (
-    <div className="bg-gradient-to-b from-slate-50 to-white p-0">
-      {/* Simulated header bar */}
-      <div className="bg-slate-800 text-white px-4 py-2.5 flex items-center gap-3">
-        <div className="h-6 w-6 rounded bg-violet-500 flex items-center justify-center">
-          <LayoutDashboard className="h-3.5 w-3.5 text-white" />
-        </div>
-        <span className="text-sm font-medium">Личный кабинет</span>
-        <div className="flex-1" />
-        <Badge className="bg-violet-500 text-white border-0 text-[10px] gap-1">
-          <Sparkles className="h-3 w-3" /> Все возможности
-        </Badge>
-      </div>
-
-      <div className="p-4 space-y-3">
-        {/* Balance + Usage row */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-            <p className="text-[10px] text-emerald-600 font-medium uppercase tracking-wider mb-1">Баланс</p>
-            <p className="text-lg font-bold text-emerald-800">12 450 ₽</p>
-            <p className="text-[10px] text-emerald-600/70 mt-0.5">Задолженность: 0 ₽</p>
-          </div>
-          <div className="bg-sky-50 border border-sky-200 rounded-lg p-3">
-            <p className="text-[10px] text-sky-600 font-medium uppercase tracking-wider mb-1">Потребление</p>
-            <div className="grid grid-cols-3 gap-1 mt-1">
-              <div className="text-center">
-                <p className="text-sm font-bold text-sky-800">87</p>
-                <p className="text-[9px] text-sky-500">мин</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-bold text-sky-800">4.2</p>
-                <p className="text-[9px] text-sky-500">ГБ</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-bold text-sky-800">23</p>
-                <p className="text-[9px] text-sky-500">СМС</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick actions */}
-        <div className="grid grid-cols-4 gap-2">
+    <div className="bg-white">
+      {/* Sidebar */}
+      <div className="flex">
+        <div className="w-12 bg-slate-50 border-r flex flex-col items-center py-3 gap-4 shrink-0">
           {[
-            { label: "Пополнить", color: "bg-amber-100 text-amber-700 border-amber-200" },
-            { label: "Автоплатёж", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-            { label: "Счета", color: "bg-sky-100 text-sky-700 border-sky-200" },
-            { label: "Статистика", color: "bg-violet-100 text-violet-700 border-violet-200" },
-          ].map((action) => (
-            <div
-              key={action.label}
-              className={`rounded-lg border p-2 text-center text-[10px] font-medium ${action.color}`}
-            >
-              {action.label}
-            </div>
+            { icon: "☰", label: "Меню" },
+            { icon: "👤", label: "Профиль" },
+            { icon: "🛒", label: "Корзина" },
+            { icon: "📊", label: "Статистика" },
+            { icon: "📁", label: "Файлы" },
+            { icon: "⚙", label: "Настройки" },
+            { icon: "✉", label: "Сообщения" },
+          ].map((item) => (
+            <Tooltip key={item.label}>
+              <TooltipTrigger asChild>
+                <div className="w-8 h-8 rounded-lg hover:bg-slate-200 flex items-center justify-center text-slate-500 cursor-pointer text-sm">
+                  {item.icon}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-xs">{item.label}</TooltipContent>
+            </Tooltip>
           ))}
         </div>
 
-        {/* Traffic chart placeholder */}
-        <div className="bg-white border border-slate-200 rounded-lg p-3">
-          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-2">График трафика</p>
-          <div className="h-20 flex items-end gap-1.5 px-2">
-            {[40, 65, 45, 80, 55, 70, 90, 60, 75, 50, 85, 95].map((h, i) => (
-              <div
-                key={i}
-                className="flex-1 bg-gradient-to-t from-violet-400 to-violet-200 rounded-t-sm"
-                style={{ height: `${h}%` }}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Promo banner */}
-        <div className="bg-gradient-to-r from-violet-500 to-purple-500 rounded-lg p-3 text-white">
-          <p className="text-[10px] font-medium opacity-80">Промо-акция</p>
-          <p className="text-xs font-bold">Подключите автоплатёж и получите +500 ₽ на счёт</p>
-        </div>
-
-        {/* Services grid */}
-        <div className="bg-white border border-slate-200 rounded-lg p-3">
-          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-2">Услуги и тарифы</p>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { name: "Тариф «Оптимальный»", price: "590 ₽/мес", active: true },
-              { name: "Доп. пакет минут", price: "200 ₽", active: true },
-              { name: "Доп. пакет ГБ", price: "150 ₽", active: true },
-              { name: "API-доступ", price: "Бесплатно", active: true },
-            ].map((svc) => (
-              <div key={svc.name} className="flex items-center justify-between bg-slate-50 rounded-md px-2.5 py-1.5">
-                <span className="text-[10px] text-slate-700">{svc.name}</span>
-                <Badge variant="outline" className="text-[9px] px-1 py-0 text-green-600 border-green-200 bg-green-50">
-                  {svc.price}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Payment history */}
-        <div className="bg-white border border-slate-200 rounded-lg p-3">
-          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-2">История платежей</p>
-          {[
-            { date: "26.06.2026", desc: "Пополнение", amount: "+1 000 ₽", color: "text-green-600" },
-            { date: "20.06.2026", desc: "Абонентская плата", amount: "-590 ₽", color: "text-red-500" },
-            { date: "15.06.2026", desc: "Пополнение", amount: "+2 000 ₽", color: "text-green-600" },
-          ].map((p) => (
-            <div key={p.date + p.desc} className="flex items-center justify-between py-1 border-b border-slate-50 last:border-0">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground">{p.date}</span>
-                <span className="text-[10px]">{p.desc}</span>
-              </div>
-              <span className={`text-[10px] font-medium ${p.color}`}>{p.amount}</span>
+        <div className="flex-1 min-w-0">
+          {/* Header */}
+          <div className="bg-white border-b px-4 py-2.5 flex items-center gap-3">
+            <span className="text-sm font-bold text-slate-800">ОАТС</span>
+            <div className="flex-1" />
+            <div className="flex items-center gap-3 text-slate-400">
+              <span className="text-sm cursor-pointer hover:text-slate-600">🌙</span>
+              <span className="text-sm cursor-pointer hover:text-slate-600">🔔</span>
+              <div className="h-7 w-7 rounded-full bg-slate-200" />
             </div>
-          ))}
-        </div>
+          </div>
 
-        {/* Legend badge */}
-        <div className="text-center">
-          <Badge variant="outline" className="text-[10px] gap-1 bg-violet-50 border-violet-200 text-violet-700">
-            <Sparkles className="h-3 w-3" />
-            Все виджеты всех кабинетов активны в cabinet-config.json
-          </Badge>
+          <div className="p-4 space-y-4">
+            {/* "Ваша АТС" заголовок */}
+            <h2 className="text-base font-bold text-slate-800">Ваша АТС</h2>
+
+            {/* [Из Постпейд] Основные настройки АТС — прогресс */}
+            <div className="border rounded-xl p-4 bg-white">
+              <div className="flex items-center gap-4">
+                <div className="relative h-16 w-16 shrink-0">
+                  <svg viewBox="0 0 36 36" className="h-16 w-16 -rotate-90">
+                    <circle cx="18" cy="18" r="14" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                    <circle cx="18" cy="18" r="14" fill="none" stroke="#facc15" strokeWidth="3" strokeDasharray="22 66" strokeLinecap="round" />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-slate-700">25%</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800">Основные настройки АТС</p>
+                  <p className="text-[10px] text-slate-500">Осталось 3 шага</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                {[
+                  { label: "Подключить номера сотрудников", done: true },
+                  { label: "Подключить многоканальные номера", done: false },
+                  { label: "Создать маршрут", done: false },
+                  { label: "Подключить запись звонков", done: false },
+                ].map((step) => (
+                  <div key={step.label} className="flex items-center gap-1.5 bg-slate-50 rounded-md px-2 py-1.5 text-[10px] text-slate-600 truncate">
+                    {step.done ? (
+                      <span className="text-green-500 shrink-0">✓</span>
+                    ) : (
+                      <span className="text-amber-500 shrink-0">+</span>
+                    )}
+                    <span className="truncate">{step.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* [Из Препейд] Номер телефона + Договор */}
+            <div className="border rounded-xl p-4 bg-white flex items-center gap-4">
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-500 text-xs">●</span>
+                  <span className="text-[10px] text-slate-500">Номер телефона</span>
+                  <span className="text-xs font-medium text-slate-800">(968) 181-14-10</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-slate-500">Договор</span>
+                  <span className="text-xs font-medium text-slate-800">123456789</span>
+                </div>
+              </div>
+              <button className="text-[10px] font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg">
+                Настроить профиль
+              </button>
+            </div>
+
+            {/* [Из Препейд] Стоимость в месяц */}
+            <div className="border rounded-xl p-4 bg-sky-50 border-sky-200">
+              <p className="text-[10px] text-sky-600">Стоимость в месяц</p>
+              <p className="text-xl font-bold text-sky-800">600 ₽</p>
+            </div>
+
+            {/* [Из Постпейд] Стандартный пакет + "Открыть счета" */}
+            <div className="border rounded-xl p-4 bg-white">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-800">Стандартный</span>
+                  <Badge variant="outline" className="text-[9px]">Пакет</Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="text-[10px] font-medium text-slate-500 hover:text-slate-700">✏️</button>
+                  <button className="text-[10px] font-medium text-white bg-amber-500 hover:bg-amber-600 px-2.5 py-1 rounded-md">
+                    Открыть счета
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {[
+                  { label: "Пакет", value: "3 490 ₽" },
+                  { label: "Сверх пакета", value: "0 ₽" },
+                  { label: "Итого", value: "3 490 ₽" },
+                ].map((item) => (
+                  <div key={item.label} className="text-center bg-slate-50 rounded-md py-2">
+                    <p className="text-xs font-bold text-slate-800">{item.value}</p>
+                    <p className="text-[9px] text-slate-500">{item.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* [Из Постпейд] 20 номеров — прогресс использования */}
+            <div className="border rounded-xl p-4 bg-white">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-semibold text-slate-800">20 номеров</span>
+                <span className="text-[10px] text-slate-500">из 20</span>
+              </div>
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden mb-3">
+                <div className="h-full bg-amber-400 rounded-full" style={{ width: "60%" }} />
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-[10px]">
+                <div>
+                  <p className="text-slate-500 mb-1">Подключено</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-amber-400" />
+                    <span className="text-slate-700">2 многоканальных номера</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="h-2 w-2 rounded-full bg-violet-400" />
+                    <span className="text-slate-700">10 номеров сотрудников</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-slate-500 mb-1">Осталось</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-slate-300" />
+                    <span className="text-slate-400">2 многоканальных номера</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="h-2 w-2 rounded-full bg-slate-300" />
+                    <span className="text-slate-400">0 номеров сотрудников</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* [Из Микро-препейд] Номера — "Входят в пакет" + "Купить" */}
+            <div className="border rounded-xl p-4 bg-amber-50 border-amber-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">Номера</p>
+                  <p className="text-[10px] text-slate-500">Входят в пакет</p>
+                </div>
+                <div className="text-right">
+                  <button className="text-[10px] font-medium text-white bg-amber-500 hover:bg-amber-600 px-3 py-1.5 rounded-md">
+                    Купить
+                  </button>
+                  <p className="text-[10px] text-amber-600 mt-1">20 номеров свободны</p>
+                </div>
+              </div>
+            </div>
+
+            {/* [Из Постпейд] Внешние SIP-номера */}
+            <div className="border rounded-xl p-4 bg-white">
+              <p className="text-sm font-semibold text-slate-800">Внешние SIP-номера</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Используйте свои номера других операторов связи</p>
+              <button className="text-[10px] font-medium text-amber-600 hover:text-amber-700 mt-2 flex items-center gap-1">
+                Смотрите, как это работает <span>»</span>
+              </button>
+            </div>
+
+            {/* [Из Препейд] Статистика за сегодня */}
+            <div className="border rounded-xl p-4 bg-white">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-semibold text-slate-800">Статистика за сегодня</p>
+                <button className="text-[10px] text-amber-600 hover:text-amber-700">Перейти к журналу звонков →</button>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                {[
+                  { label: "Всего входящих", value: "210", icon: "↓", color: "text-slate-700" },
+                  { label: "Пропущено", value: "42", icon: "−", color: "text-red-500" },
+                  { label: "Принято", value: "138", icon: "↓", color: "text-sky-600" },
+                  { label: "Исходящих", value: "197", icon: "↑", color: "text-slate-700" },
+                  { label: "Время разговоров", value: "23:08:37", icon: "⏱", color: "text-slate-700" },
+                ].map((m) => (
+                  <div key={m.label} className="text-center bg-slate-50 rounded-lg py-2 px-1">
+                    <p className="text-[10px] text-slate-500 mb-0.5">{m.icon}</p>
+                    <p className={`text-sm font-bold ${m.color}`}>{m.value}</p>
+                    <p className="text-[8px] text-slate-400 mt-0.5 leading-tight">{m.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* [Из Препейд] Управление звонками */}
+            <div className="border rounded-xl p-4 bg-white">
+              <p className="text-sm font-semibold text-slate-800 mb-3">Управление звонками</p>
+              <div className="space-y-2.5">
+                {[
+                  "Простая переадресация",
+                  "Переадресация на несколько номеров",
+                  "Черные и белые списки",
+                  "Голосовая почта",
+                ].map((feature) => (
+                  <div key={feature} className="flex items-center justify-between">
+                    <span className="text-[11px] text-slate-600">{feature}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-7 rounded-full bg-slate-200 relative">
+                        <div className="absolute left-0.5 top-0.5 h-3 w-3 rounded-full bg-white shadow" />
+                      </div>
+                      <span className="text-slate-400 text-xs">ℹ</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* [Из Препейд] Услуги */}
+            <div className="border rounded-xl p-4 bg-white">
+              <p className="text-sm font-semibold text-slate-800 mb-3">Услуги</p>
+              <div className="space-y-2.5">
+                {[
+                  { name: "Запись разговора", active: true },
+                  { name: "Ограничение вызовов", active: true },
+                ].map((svc) => (
+                  <div key={svc.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-500 text-xs">✓</span>
+                      <span className="text-[11px] text-slate-600">{svc.name}</span>
+                    </div>
+                    <span className="text-slate-400 text-xs">⚙</span>
+                  </div>
+                ))}
+                {/* Файлы — вложенный блок */}
+                <div className="bg-slate-50 rounded-lg p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-500 text-xs">✓</span>
+                    <div>
+                      <p className="text-[11px] text-slate-600 font-medium">Файлы</p>
+                      <p className="text-[9px] text-slate-400">Занято 0 ГБ из 1 ГБ</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <button className="text-[10px] text-amber-600">Файлы →</button>
+                    <p className="text-[9px] text-slate-400">1 ГБ доступно</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* [Общий] Управление номерами — заголовок + вкладки */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800 mb-2">Управление номерами</h3>
+              <div className="flex gap-4 border-b mb-3">
+                <button className="text-xs font-medium text-amber-600 border-b-2 border-amber-500 pb-1.5">
+                  Номера сотрудников
+                </button>
+                <button className="text-xs font-medium text-slate-400 pb-1.5 hover:text-slate-600">
+                  Многоканальные номера
+                </button>
+              </div>
+              {/* Панель поиска */}
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex-1 flex items-center gap-2 bg-slate-50 border rounded-lg px-3 py-1.5">
+                  <span className="text-slate-400 text-xs">🔍</span>
+                  <span className="text-[11px] text-slate-400">Поиск</span>
+                </div>
+                <span className="text-[10px] text-slate-500 bg-slate-50 border rounded-lg px-2.5 py-1.5">Везде</span>
+                <span className="text-slate-400 text-xs">🔽</span>
+                <span className="text-slate-400 text-xs">⬇️ Импорт</span>
+                <button className="text-[10px] font-medium text-white bg-amber-500 hover:bg-amber-600 px-3 py-1.5 rounded-lg">
+                  + Номера сотрудников
+                </button>
+              </div>
+              {/* Мини-таблица */}
+              <div className="border rounded-lg overflow-hidden">
+                <div className="bg-slate-50 grid grid-cols-5 text-[9px] font-medium text-slate-500 px-3 py-1.5">
+                  <span>Номер</span><span>Имя</span><span>Короткий</span><span>Статус SIP</span><span>Действия</span>
+                </div>
+                {[
+                  { num: "(968) 181-14-10", name: "Иванов Иван", short: "201", sip: true },
+                  { num: "(968) 181-14-11", name: "Петров Петр", short: "202", sip: true },
+                  { num: "(985) 978-98-11", name: "Сидоров Сидор", short: "203", sip: false },
+                ].map((row) => (
+                  <div key={row.num} className="grid grid-cols-5 text-[10px] px-3 py-2 border-t">
+                    <span className="font-mono text-slate-700">{row.num}</span>
+                    <span className="text-slate-600">{row.name}</span>
+                    <span className="font-mono text-slate-500">{row.short}</span>
+                    <span>{row.sip ? <span className="text-green-500">●</span> : <span className="text-slate-300">●</span>}</span>
+                    <span className="text-slate-400">⋯</span>
+                  </div>
+                ))}
+              </div>
+              {/* Пагинация */}
+              <div className="flex items-center justify-between mt-2 text-[10px] text-slate-500">
+                <span>Строк на странице: 10</span>
+                <span>1-10 из 100</span>
+                <div className="flex gap-1">
+                  <span className="px-1.5 py-0.5 bg-slate-100 rounded">«</span>
+                  <span className="px-1.5 py-0.5 bg-slate-100 rounded">‹</span>
+                  <span className="px-1.5 py-0.5 bg-slate-100 rounded">›</span>
+                  <span className="px-1.5 py-0.5 bg-slate-100 rounded">»</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Source legend */}
+            <div className="flex flex-wrap gap-2 pt-2">
+              <Badge variant="outline" className="text-[9px] gap-1 bg-emerald-50 border-emerald-200 text-emerald-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Постпейд
+              </Badge>
+              <Badge variant="outline" className="text-[9px] gap-1 bg-amber-50 border-amber-200 text-amber-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Микробизнес Препейд
+              </Badge>
+              <Badge variant="outline" className="text-[9px] gap-1 bg-sky-50 border-sky-200 text-sky-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-sky-500" /> Полноценный Препейд
+              </Badge>
+            </div>
+          </div>
         </div>
       </div>
     </div>
