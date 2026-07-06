@@ -1,0 +1,956 @@
+     1→"use client";
+     2→
+     3→import { useState, useMemo } from "react";
+     4→import { Badge } from "@/components/ui/badge";
+     5→import { Button } from "@/components/ui/button";
+     6→import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+     7→import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+     8→import { Switch } from "@/components/ui/switch";
+     9→import { Separator } from "@/components/ui/separator";
+    10→import {
+    11→  Tooltip,
+    12→  TooltipContent,
+    13→  TooltipProvider,
+    14→  TooltipTrigger,
+    15→} from "@/components/ui/tooltip";
+    16→import {
+    17→  Eye,
+    18→  EyeOff,
+    19→  Lock,
+    20→  Unlock,
+    21→  FileJson,
+    22→  LayoutDashboard,
+    23→  ArrowRight,
+    24→  Check,
+    25→  X,
+    26→  Zap,
+    27→  GitBranch,
+    28→  Layers,
+    29→  Settings,
+    30→  ChevronDown,
+    31→  ChevronRight,
+    32→  Sparkles,
+    33→} from "lucide-react";
+    34→
+    35→// ─── Types ───────────────────────────────────────────────────────────────────
+    36→
+    37→type CabinetType = "postpaid" | "micro_prepaid" | "prepaid" | "full";
+    38→
+    39→interface RouteConfig {
+    40→  path: string;
+    41→  label: string;
+    42→  allowed: boolean;
+    43→}
+    44→
+    45→interface SectionConfig {
+    46→  id: string;
+    47→  label: string;
+    48→  visible: boolean;
+    49→}
+    50→
+    51→interface UIElementConfig {
+    52→  id: string;
+    53→  label: string;
+    54→  visible: boolean;
+    55→  description: string;
+    56→}
+    57→
+    58→interface CabinetSpec {
+    59→  key: CabinetType;
+    60→  title: string;
+    61→  subtitle: string;
+    62→  billingType: string;
+    63→  segment: string;
+    64→  routes: RouteConfig[];
+    65→  sections: SectionConfig[];
+    66→  uiElements: UIElementConfig[];
+    67→  image: string;
+    68→  accentColor: string;
+    69→  bgColor: string;
+    70→}
+    71→
+    72→// ─── Cabinet Specifications (Tolya's concept) ────────────────────────────────
+    73→
+    74→const CABINET_SPECS: CabinetSpec[] = [
+    75→  {
+    76→    key: "full",
+    77→    title: "Полный кабинет (демо)",
+    78→    subtitle: "Все возможности · Демонстрация конфига",
+    79→    billingType: "all",
+    80→    segment: "all",
+    81→    routes: [
+    82→      { path: "/dashboard", label: "Главная / Дашборд", allowed: true },
+    83→      { path: "/statistics", label: "Статистика", allowed: true },
+    84→      { path: "/services", label: "Услуги и тарифы", allowed: true },
+    85→      { path: "/payments", label: "Платежи и счета", allowed: true },
+    86→      { path: "/support", label: "Поддержка", allowed: true },
+    87→      { path: "/settings", label: "Настройки", allowed: true },
+    88→      { path: "/api-docs", label: "API-документация", allowed: true },
+    89→      { path: "/*", label: "Все остальные роуты", allowed: true },
+    90→    ],
+    91→    sections: [
+    92→      { id: "balance-widget", label: "Виджет баланса", visible: true },
+    93→      { id: "traffic-chart", label: "График трафика", visible: true },
+    94→      { id: "services-grid", label: "Сетка услуг", visible: true },
+    95→      { id: "payment-history", label: "История платежей", visible: true },
+    96→      { id: "notifications", label: "Уведомления", visible: true },
+    97→      { id: "quick-actions", label: "Быстрые действия", visible: true },
+    98→      { id: "promo-banner", label: "Промо-баннер", visible: true },
+    99→      { id: "tariff-details", label: "Детали тарифа", visible: true },
+   100→    ],
+   101→    uiElements: [
+   102→      { id: "btn-top-up", label: "Кнопка \u00ABПополнить\u00BB", visible: true, description: "Доступна и для постпейда (автопополнение), и для препейда" },
+   103→      { id: "btn-auto-pay", label: "Автоплатёж", visible: true, description: "Доступен на всех тарифах" },
+   104→      { id: "link-invoices", label: "Ссылка на счета", visible: true, description: "Показывается на постпейде, а на препейде — история платежей" },
+   105→      { id: "link-statistics", label: "Раздел статистики", visible: true, description: "Полная аналитика для всех типов кабинетов" },
+   106→      { id: "block-usage", label: "Блок потребления", visible: true, description: "Текущее потребление минут/ГБ/СМС + остаток пакета" },
+   107→      { id: "block-balance", label: "Блок баланса", visible: true, description: "Баланс и задолженность (постпейд) или остаток (препейд)" },
+   108→    ],
+   109→    image: null,
+   110→    accentColor: "bg-violet-600",
+   111→    bgColor: "bg-violet-50 border-violet-200",
+   112→  },
+   113→  {
+   114→    key: "postpaid",
+   115→    title: "Стандартный кабинет",
+   116→    subtitle: "Постпейд · Самозанятые / Бизнес",
+   117→    billingType: "postpaid",
+   118→    segment: "selfployt",
+   119→    routes: [
+   120→      { path: "/dashboard", label: "Главная / Дашборд", allowed: true },
+   121→      { path: "/statistics", label: "Статистика", allowed: true },
+   122→      { path: "/services", label: "Услуги и тарифы", allowed: true },
+   123→      { path: "/payments", label: "Платежи и счета", allowed: true },
+   124→      { path: "/support", label: "Поддержка", allowed: true },
+   125→      { path: "/settings", label: "Настройки", allowed: true },
+   126→      { path: "/api-docs", label: "API-документация", allowed: true },
+   127→      { path: "/*", label: "Все остальные роуты", allowed: true },
+   128→    ],
+   129→    sections: [
+   130→      { id: "balance-widget", label: "Виджет баланса", visible: true },
+   131→      { id: "traffic-chart", label: "График трафика", visible: true },
+   132→      { id: "services-grid", label: "Сетка услуг", visible: true },
+   133→      { id: "payment-history", label: "История платежей", visible: true },
+   134→      { id: "notifications", label: "Уведомления", visible: true },
+   135→      { id: "quick-actions", label: "Быстрые действия", visible: true },
+   136→      { id: "promo-banner", label: "Промо-баннер", visible: true },
+   137→      { id: "tariff-details", label: "Детали тарифа", visible: true },
+   138→    ],
+   139→    uiElements: [
+   140→      { id: "btn-top-up", label: "Кнопка «Пополнить»", visible: true, description: "Пополнение баланса не требуется — постпейд" },
+   141→      { id: "btn-auto-pay", label: "Автоплатёж", visible: true, description: "Настройка автосписания" },
+   142→      { id: "link-invoices", label: "Ссылка на счета", visible: true, description: "Просмотр и скачивание счетов" },
+   143→      { id: "link-statistics", label: "Раздел статистики", visible: true, description: "Полная аналитика по трафику и звонкам" },
+   144→      { id: "block-usage", label: "Блок потребления", visible: true, description: "Текущее потребление минут/ГБ/СМС" },
+   145→      { id: "block-balance", label: "Блок баланса", visible: true, description: "Текущий баланс и задолженность" },
+   146→    ],
+   147→    image: "/cabinets/cabinet_postpaid.png",
+   148→    accentColor: "bg-emerald-600",
+   149→    bgColor: "bg-emerald-50 border-emerald-200",
+   150→  },
+   151→  {
+   152→    key: "micro_prepaid",
+   153→    title: "Микробизнес Препейд",
+   154→    subtitle: "Препейд · Микробизнес",
+   155→    billingType: "prepaid",
+   156→    segment: "micro",
+   157→    routes: [
+   158→      { path: "/dashboard", label: "Главная / Дашборд", allowed: true },
+   159→      { path: "/statistics", label: "Статистика", allowed: false },
+   160→      { path: "/services", label: "Услуги и тарифы", allowed: true },
+   161→      { path: "/payments", label: "Платежи и счета", allowed: true },
+   162→      { path: "/support", label: "Поддержка", allowed: true },
+   163→      { path: "/settings", label: "Настройки", allowed: true },
+   164→      { path: "/api-docs", label: "API-документация", allowed: false },
+   165→      { path: "/*", label: "Все остальные роуты", allowed: false },
+   166→    ],
+   167→    sections: [
+   168→      { id: "balance-widget", label: "Виджет баланса", visible: true },
+   169→      { id: "traffic-chart", label: "График трафика", visible: false },
+   170→      { id: "services-grid", label: "Сетка услуг", visible: true },
+   171→      { id: "payment-history", label: "История платежей", visible: true },
+   172→      { id: "notifications", label: "Уведомления", visible: true },
+   173→      { id: "quick-actions", label: "Быстрые действия", visible: true },
+   174→      { id: "promo-banner", label: "Промо-баннер", visible: false },
+   175→      { id: "tariff-details", label: "Детали тарифа", visible: true },
+   176→    ],
+   177→    uiElements: [
+   178→      { id: "btn-top-up", label: "Кнопка «Пополнить»", visible: true, description: "Основное действие для препейда — пополнить баланс" },
+   179→      { id: "btn-auto-pay", label: "Автоплатёж", visible: false, description: "Не доступно на микробизнес-препейд" },
+   180→      { id: "link-invoices", label: "Ссылка на счета", visible: false, description: "Счета не формируются — предоплата" },
+   181→      { id: "link-statistics", label: "Раздел статистики", visible: false, description: "Статистика недоступна на этом тарифе" },
+   182→      { id: "block-usage", label: "Блок потребления", visible: true, description: "Остаток минут/ГБ/СМС" },
+   183→      { id: "block-balance", label: "Блок баланса", visible: true, description: "Текущий баланс на препейде" },
+   184→    ],
+   185→    image: "/cabinets/cabinet_micro_prepaid.png",
+   186→    accentColor: "bg-amber-600",
+   187→    bgColor: "bg-amber-50 border-amber-200",
+   188→  },
+   189→  {
+   190→    key: "prepaid",
+   191→    title: "Полноценный Препейд",
+   192→    subtitle: "Препейд · Самозанятые / Бизнес",
+   193→    billingType: "prepaid",
+   194→    segment: "selfployt",
+   195→    routes: [
+   196→      { path: "/dashboard", label: "Главная / Дашборд", allowed: true },
+   197→      { path: "/statistics", label: "Статистика", allowed: true },
+   198→      { path: "/services", label: "Услуги и тарифы", allowed: true },
+   199→      { path: "/payments", label: "Платежи и счета", allowed: true },
+   200→      { path: "/support", label: "Поддержка", allowed: true },
+   201→      { path: "/settings", label: "Настройки", allowed: true },
+   202→      { path: "/api-docs", label: "API-документация", allowed: true },
+   203→      { path: "/*", label: "Все остальные роуты", allowed: false },
+   204→    ],
+   205→    sections: [
+   206→      { id: "balance-widget", label: "Виджет баланса", visible: true },
+   207→      { id: "traffic-chart", label: "График трафика", visible: true },
+   208→      { id: "services-grid", label: "Сетка услуг", visible: true },
+   209→      { id: "payment-history", label: "История платежей", visible: true },
+   210→      { id: "notifications", label: "Уведомления", visible: true },
+   211→      { id: "quick-actions", label: "Быстрые действия", visible: true },
+   212→      { id: "promo-banner", label: "Промо-баннер", visible: true },
+   213→      { id: "tariff-details", label: "Детали тарифа", visible: true },
+   214→    ],
+   215→    uiElements: [
+   216→      { id: "btn-top-up", label: "Кнопка «Пополнить»", visible: true, description: "Основное действие — пополнение баланса" },
+   217→      { id: "btn-auto-pay", label: "Автоплатёж", visible: true, description: "Доступен автоплатёж через карту" },
+   218→      { id: "link-invoices", label: "Ссылка на счета", visible: false, description: "На препейде счета не нужны" },
+   219→      { id: "link-statistics", label: "Раздел статистики", visible: true, description: "Полная статистика доступна" },
+   220→      { id: "block-usage", label: "Блок потребления", visible: true, description: "Остаток пакета" },
+   221→      { id: "block-balance", label: "Блок баланса", visible: true, description: "Текущий баланс" },
+   222→    ],
+   223→    image: "/cabinets/cabinet_prepaid.png",
+   224→    accentColor: "bg-sky-600",
+   225→    bgColor: "bg-sky-50 border-sky-200",
+   226→  },
+   227→];
+   228→
+   229→// ─── JSON Config Generator ──────────────────────────────────────────────────
+   230→
+   231→function generateConfigJSON(spec: CabinetSpec): string {
+   232→  const config = {
+   233→    cabinetType: spec.key,
+   234→    billingType: spec.billingType,
+   235→    segment: spec.segment,
+   236→    meta: {
+   237→      title: spec.title,
+   238→      description: spec.subtitle,
+   239→    },
+   240→    routes: {
+   241→      allow: spec.routes.filter((r) => r.allowed).map((r) => r.path),
+   242→      deny: spec.routes.filter((r) => !r.allowed).map((r) => r.path),
+   243→    },
+   244→    sections: Object.fromEntries(
+   245→      spec.sections.map((s) => [s.id, { visible: s.visible, label: s.label }])
+   246→    ),
+   247→    ui: Object.fromEntries(
+   248→      spec.uiElements.map((u) => [u.id, { visible: u.visible, label: u.label }])
+   249→    ),
+   250→  };
+   251→  return JSON.stringify(config, null, 2);
+   252→}
+   253→
+   254→// ─── Diff Component ─────────────────────────────────────────────────────────
+   255→
+   256→function DiffIndicator({
+   257→  current,
+   258→  base,
+   259→  label,
+   260→}: {
+   261→  current: boolean;
+   262→  base: boolean;
+   263→  label: string;
+   264→}) {
+   265→  const isDiff = current !== base;
+   266→  return (
+   267→    <div
+   268→      className={`flex items-center gap-2 py-1.5 px-3 rounded-md text-sm transition-colors ${
+   269→        isDiff
+   270→          ? current
+   271→            ? "bg-green-50 text-green-800 border border-green-200"
+   272→            : "bg-red-50 text-red-800 border border-red-200"
+   273→          : "bg-muted/50 text-muted-foreground"
+   274→      }`}
+   275→    >
+   276→      {current ? (
+   277→        <Eye className="h-3.5 w-3.5 shrink-0" />
+   278→      ) : (
+   279→        <EyeOff className="h-3.5 w-3.5 shrink-0" />
+   280→      )}
+   281→      <span className="flex-1">{label}</span>
+   282→      {isDiff && (
+   283→        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+   284→          {current ? "включено" : "скрыто"}
+   285→        </Badge>
+   286→      )}
+   287→    </div>
+   288→  );
+   289→}
+   290→
+   291→// ─── Collapsible Section ────────────────────────────────────────────────────
+   292→
+   293→function CollapsibleSection({
+   294→  title,
+   295→  icon,
+   296→  children,
+   297→  defaultOpen = false,
+   298→}: {
+   299→  title: string;
+   300→  icon: React.ReactNode;
+   301→  children: React.ReactNode;
+   302→  defaultOpen?: boolean;
+   303→}) {
+   304→  const [open, setOpen] = useState(defaultOpen);
+   305→  return (
+   306→    <div className="border rounded-lg overflow-hidden">
+   307→      <button
+   308→        onClick={() => setOpen(!open)}
+   309→        className="w-full flex items-center gap-2 px-4 py-3 text-left font-medium text-sm hover:bg-muted/50 transition-colors"
+   310→      >
+   311→        {icon}
+   312→        <span className="flex-1">{title}</span>
+   313→        {open ? (
+   314→          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+   315→        ) : (
+   316→          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+   317→        )}
+   318→      </button>
+   319→      {open && <div className="px-4 pb-4 space-y-2">{children}</div>}
+   320→    </div>
+   321→  );
+   322→}
+   323→
+   324→// ─── Main Page ──────────────────────────────────────────────────────────────
+   325→
+   326→export default function Page() {
+   327→  const [activeCabinet, setActiveCabinet] = useState<CabinetType>("postpaid");
+   328→  const [compareMode, setCompareMode] = useState(false);
+   329→  const [baseCabinet, setBaseCabinet] = useState<CabinetType>("postpaid");
+   330→  const [showConfig, setShowConfig] = useState(true);
+   331→
+   332→  const currentSpec = useMemo(
+   333→    () => CABINET_SPECS.find((s) => s.key === activeCabinet)!,
+   334→    [activeCabinet]
+   335→  );
+   336→  const baseSpec = useMemo(
+   337→    () => CABINET_SPECS.find((s) => s.key === baseCabinet)!,
+   338→    [baseCabinet]
+   339→  );
+   340→
+   341→  const configJson = useMemo(() => generateConfigJSON(currentSpec), [currentSpec]);
+   342→
+   343→  // Count differences
+   344→  const diffCount = useMemo(() => {
+   345→    if (!compareMode) return 0;
+   346→    let count = 0;
+   347→    currentSpec.sections.forEach((s, i) => {
+   348→      if (s.visible !== baseSpec.sections[i].visible) count++;
+   349→    });
+   350→    currentSpec.uiElements.forEach((u, i) => {
+   351→      if (u.visible !== baseSpec.uiElements[i].visible) count++;
+   352→    });
+   353→    currentSpec.routes.forEach((r, i) => {
+   354→      if (r.allowed !== baseSpec.routes[i].allowed) count++;
+   355→    });
+   356→    return count;
+   357→  }, [currentSpec, baseSpec, compareMode]);
+   358→
+   359→  return (
+   360→    <TooltipProvider delayDuration={300}>
+   361→      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100">
+   362→        {/* ── Header ── */}
+   363→        <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+   364→          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-4">
+   365→            <div className="flex items-center gap-2.5">
+   366→              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-slate-800 to-slate-600 flex items-center justify-center">
+   367→                <LayoutDashboard className="h-4 w-4 text-white" />
+   368→              </div>
+   369→              <div>
+   370→                <h1 className="text-sm font-bold leading-tight">
+   371→                  Прототип конфигурируемых кабинетов
+   372→                </h1>
+   373→                <p className="text-[11px] text-muted-foreground leading-tight">
+   374→                  Концепция Толи · Декларативная конфигурация UI
+   375→                </p>
+   376→              </div>
+   377→            </div>
+   378→            <div className="flex-1" />
+   379→            <Badge variant="outline" className="text-xs gap-1.5">
+   380→              <FileJson className="h-3 w-3" />
+   381→              Конфигурационный подход
+   382→            </Badge>
+   383→          </div>
+   384→        </header>
+   385→
+   386→        {/* ── Main Content ── */}
+   387→        <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-6">
+   388→          {/* ── Concept Explanation ── */}
+   389→          <Card className="mb-6 border-2 border-dashed border-slate-300 bg-white">
+   390→            <CardHeader className="pb-3">
+   391→              <div className="flex items-center gap-2">
+   392→                <Zap className="h-5 w-5 text-amber-500" />
+   393→                <CardTitle className="text-base">Суть концепции</CardTitle>
+   394→              </div>
+   395→              <CardDescription className="text-xs">
+   396→                Из транскрипции &laquo;ЛК ОАТС || Архитектура&raquo;, 26 июня 2026 г.
+   397→              </CardDescription>
+   398→            </CardHeader>
+   399→            <CardContent className="text-sm text-muted-foreground space-y-2 pb-4">
+   400→              <p>
+   401→                <strong className="text-foreground">Проблема:</strong> 800+ проверок{" "}
+   402→                <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+   403→                  if (isPrepaid) / if (isSelfployt)
+   404→                </code>{" "}
+   405→                разбросаны по 244 файлам. Императивный подход не масштабируется —
+   406→                каждая новая конфигурация кабинета требует изменений в сотнях мест.
+   407→              </p>
+   408→              <p>
+   409→                <strong className="text-foreground">Решение:</strong> Единый
+   410→                конфигурационный файл (реестр фича-флагов), который декларативно
+   411→                определяет доступные роуты, видимые секции и UI-элементы для каждого
+   412→                типа кабинета. Аналогия — i18n файлы, но вместо переводов —
+   413→                условия отображения. Позже можно вынести в бэк-офис для менеджеров.
+   414→              </p>
+   415→              <div className="flex flex-wrap gap-2 pt-2">
+   416→                <Badge variant="secondary" className="text-xs gap-1">
+   417→                  <Layers className="h-3 w-3" /> Биллинг: Постпейд / Препейд / Контракт
+   418→                </Badge>
+   419→                <Badge variant="secondary" className="text-xs gap-1">
+   420→                  <GitBranch className="h-3 w-3" /> Сегмент: Самозанятые / Микробизнес / Бизнес
+   421→                </Badge>
+   422→                <Badge variant="secondary" className="text-xs gap-1">
+   423→                  <Settings className="h-3 w-3" /> Матрица: биллинг x сегмент = кабинет
+   424→                </Badge>
+   425→              </div>
+   426→            </CardContent>
+   427→          </Card>
+   428→
+   429→          {/* ── Cabinet Selector ── */}
+   430→          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-6">
+   431→            {CABINET_SPECS.map((spec) => (
+   432→              <button
+   433→                key={spec.key}
+   434→                onClick={() => setActiveCabinet(spec.key)}
+   435→                className={`relative text-left p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
+   436→                  activeCabinet === spec.key
+   437→                    ? `${spec.bgColor} shadow-sm ring-2 ring-offset-1 ring-slate-300`
+   438→                    : "bg-white border-slate-200 hover:border-slate-300"
+   439→                }`}
+   440→              >
+   441→                <div className="flex items-center gap-2 mb-1">
+   442→                  <div
+   443→                    className={`h-3 w-3 rounded-full ${
+   444→                      activeCabinet === spec.key ? spec.accentColor : "bg-slate-300"
+   445→                    }`}
+   446→                  />
+   447→                  <span className="font-semibold text-sm">{spec.title}</span>
+   448→                </div>
+   449→                <span className="text-xs text-muted-foreground">{spec.subtitle}</span>
+   450→                {activeCabinet === spec.key && (
+   451→                  <div className="absolute top-2 right-2">
+   452→                    <Check className={`h-5 w-5 ${spec.accentColor.replace("bg-", "text-")}`} />
+   453→                  </div>
+   454→                )}
+   455→              </button>
+   456→            ))}
+   457→          </div>
+   458→
+   459→          {/* ── Controls Bar ── */}
+   460→          <div className="flex flex-wrap items-center gap-4 mb-6 bg-white rounded-xl border p-3">
+   461→            <div className="flex items-center gap-2">
+   462→              <Switch
+   463→                id="compare-mode"
+   464→                checked={compareMode}
+   465→                onCheckedChange={setCompareMode}
+   466→              />
+   467→              <label htmlFor="compare-mode" className="text-sm font-medium cursor-pointer">
+   468→                Режим сравнения
+   469→              </label>
+   470→            </div>
+   471→
+   472→            {compareMode && (
+   473→              <>
+   474→                <Separator orientation="vertical" className="h-6" />
+   475→                <div className="flex items-center gap-2">
+   476→                  <span className="text-xs text-muted-foreground">Сравнить с:</span>
+   477→                  <div className="flex gap-1.5">
+   478→                    {CABINET_SPECS.filter((s) => s.key !== activeCabinet).map((spec) => (
+   479→                      <button
+   480→                        key={spec.key}
+   481→                        onClick={() => setBaseCabinet(spec.key)}
+   482→                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+   483→                          baseCabinet === spec.key
+   484→                            ? `${spec.accentColor} text-white`
+   485→                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+   486→                        }`}
+   487→                      >
+   488→                        {spec.title}
+   489→                      </button>
+   490→                    ))}
+   491→                  </div>
+   492→                </div>
+   493→                <Badge variant="outline" className="text-xs">
+   494→                  {diffCount} {diffCount === 1 ? "различие" : diffCount < 5 ? "различия" : "различий"}
+   495→                </Badge>
+   496→              </>
+   497→            )}
+   498→
+   499→            <div className="flex-1" />
+   500→
+   501→            <div className="flex items-center gap-2">
+   502→              <Switch
+   503→                id="show-config"
+   504→                checked={showConfig}
+   505→                onCheckedChange={setShowConfig}
+   506→              />
+   507→              <label htmlFor="show-config" className="text-sm text-muted-foreground cursor-pointer">
+   508→                Конфиг-файл
+   509→              </label>
+   510→            </div>
+   511→          </div>
+   512→
+   513→          {/* ── Main Grid: Image + Config/Spec ── */}
+   514→          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+   515→            {/* ── Left: Cabinet Screenshot ── */}
+   516→            <div className={showConfig ? "xl:col-span-7" : "xl:col-span-12"}>
+   517→              <Card className="overflow-hidden">
+   518→                <CardHeader className="pb-2">
+   519→                  <div className="flex items-center justify-between">
+   520→                    <div>
+   521→                      <CardTitle className="text-lg">{currentSpec.title}</CardTitle>
+   522→                      <CardDescription className="text-xs mt-0.5">
+   523→                        {currentSpec.subtitle}
+   524→                      </CardDescription>
+   525→                    </div>
+   526→                    <Badge className={`${currentSpec.accentColor} text-white`}>
+   527→                      {currentSpec.billingType === "postpaid" ? "Постпейд" : "Препейд"}
+   528→                    </Badge>
+   529→                  </div>
+   530→                </CardHeader>
+   531→                <CardContent className="p-0">
+   532→                  <div className="relative bg-slate-100">
+   533→                    <img
+   534→                      src={currentSpec.image}
+   535→                      alt={currentSpec.title}
+   536→                      className="w-full h-auto"
+   537→                      loading="eager"
+   538→                    />
+   539→                    {/* Overlay labels */}
+   540→                    <div className="absolute top-3 left-3">
+   541→                      <Badge className="bg-black/70 text-white backdrop-blur-sm border-0 text-[11px]">
+   542→                        Дизайн-макет кабинета
+   543→                      </Badge>
+   544→                    </div>
+   545→                  </div>
+   546→                </CardContent>
+   547→              </Card>
+   548→
+   549→              {/* ── Comparison: 3 images side by side (mobile-friendly) ── */}
+   550→              <div className="mt-6">
+   551→                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+   552→                  <LayoutDashboard className="h-4 w-4" />
+   553→                  Все три варианта кабинетов
+   554→                </h3>
+   555→                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+   556→                  {CABINET_SPECS.map((spec) => (
+   557→                    <button
+   558→                      key={spec.key}
+   559→                      onClick={() => setActiveCabinet(spec.key)}
+   560→                      className={`rounded-lg overflow-hidden border-2 transition-all duration-200 hover:shadow-md ${
+   561→                        activeCabinet === spec.key
+   562→                          ? "ring-2 ring-offset-1 ring-slate-400 border-slate-400"
+   563→                          : "border-slate-200 hover:border-slate-300"
+   564→                      }`}
+   565→                    >
+   566→                      <div className="relative">
+   567→                        <img
+   568→                          src={spec.image}
+   569→                          alt={spec.title}
+   570→                          className="w-full h-auto"
+   571→                          loading="lazy"
+   572→                        />
+   573→                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
+   574→                          <p className="text-white text-xs font-semibold">{spec.title}</p>
+   575→                          <p className="text-white/70 text-[10px]">{spec.subtitle}</p>
+   576→                        </div>
+   577→                        {activeCabinet === spec.key && (
+   578→                          <div className="absolute top-2 right-2">
+   579→                            <div className={`h-6 w-6 rounded-full ${spec.accentColor} flex items-center justify-center`}>
+   580→                              <Check className="h-3.5 w-3.5 text-white" />
+   581→                            </div>
+   582→                          </div>
+   583→                        )}
+   584→                      </div>
+   585→                    </button>
+   586→                  ))}
+   587→                </div>
+   588→              </div>
+   589→            </div>
+   590→
+   591→            {/* ── Right: Config + Spec Details ── */}
+   592→            {showConfig && (
+   593→              <div className="xl:col-span-5 space-y-4">
+   594→                {/* ── Config JSON ── */}
+   595→                <Card>
+   596→                  <CardHeader className="pb-2">
+   597→                    <div className="flex items-center gap-2">
+   598→                      <FileJson className="h-4 w-4 text-amber-500" />
+   599→                      <CardTitle className="text-sm">cabinet-config.json</CardTitle>
+   600→                    </div>
+   601→                    <CardDescription className="text-[11px]">
+   602→                      Конфигурационный файл, управляющий отображением кабинета.
+   603→                      Измените тип кабинета, чтобы увидеть, как меняется файл.
+   604→                    </CardDescription>
+   605→                  </CardHeader>
+   606→                  <CardContent className="p-0">
+   607→                    <div className="bg-slate-900 text-slate-100 p-4 overflow-x-auto max-h-[400px] overflow-y-auto">
+   608→                      <pre className="text-[11px] leading-relaxed font-mono">
+   609→                        <code>{configJson}</code>
+   610→                      </pre>
+   611→                    </div>
+   612→                  </CardContent>
+   613→                </Card>
+   614→
+   615→                {/* ── Detailed Spec ── */}
+   616→                <div className="space-y-3">
+   617→                  <h3 className="text-sm font-semibold flex items-center gap-2">
+   618→                    <Settings className="h-4 w-4" />
+   619→                    Детали конфигурации
+   620→                  </h3>
+   621→
+   622→                  {/* Routes */}
+   623→                  <CollapsibleSection
+   624→                    title={`Роуты (${currentSpec.routes.filter((r) => r.allowed).length}/${currentSpec.routes.length} доступны)`}
+   625→                    icon={<GitBranch className="h-4 w-4 text-emerald-600" />}
+   626→                    defaultOpen={true}
+   627→                  >
+   628→                    {currentSpec.routes.map((route, i) => (
+   629→                      <div
+   630→                        key={route.path}
+   631→                        className={`flex items-center gap-2 py-1.5 px-3 rounded-md text-sm ${
+   632→                          compareMode
+   633→                            ? route.allowed !== baseSpec.routes[i].allowed
+   634→                              ? route.allowed
+   635→                                ? "bg-green-50 text-green-800 border border-green-200"
+   636→                                : "bg-red-50 text-red-800 border border-red-200"
+   637→                              : "bg-muted/50 text-muted-foreground"
+   638→                            : route.allowed
+   639→                            ? "text-foreground"
+   640→                            : "bg-muted/50 text-muted-foreground"
+   641→                        }`}
+   642→                      >
+   643→                        {route.allowed ? (
+   644→                          <Unlock className="h-3.5 w-3.5 text-green-600 shrink-0" />
+   645→                        ) : (
+   646→                          <Lock className="h-3.5 w-3.5 text-red-500 shrink-0" />
+   647→                        )}
+   648→                        <code className="text-xs font-mono flex-1 truncate">{route.path}</code>
+   649→                        <span className="text-xs opacity-70 shrink-0">{route.label}</span>
+   650→                      </div>
+   651→                    ))}
+   652→                  </CollapsibleSection>
+   653→
+   654→                  {/* Sections */}
+   655→                  <CollapsibleSection
+   656→                    title={`Секции страницы (${currentSpec.sections.filter((s) => s.visible).length}/${currentSpec.sections.length} видимых)`}
+   657→                    icon={<Layers className="h-4 w-4 text-sky-600" />}
+   658→                    defaultOpen={true}
+   659→                  >
+   660→                    {currentSpec.sections.map((section, i) => (
+   661→                      <DiffIndicator
+   662→                        key={section.id}
+   663→                        current={section.visible}
+   664→                        base={compareMode ? baseSpec.sections[i].visible : section.visible}
+   665→                        label={section.label}
+   666→                      />
+   667→                    ))}
+   668→                  </CollapsibleSection>
+   669→
+   670→                  {/* UI Elements */}
+   671→                  <CollapsibleSection
+   672→                    title={`UI-элементы (${currentSpec.uiElements.filter((u) => u.visible).length}/${currentSpec.uiElements.length} видимых)`}
+   673→                    icon={<Zap className="h-4 w-4 text-amber-600" />}
+   674→                    defaultOpen={false}
+   675→                  >
+   676→                    {currentSpec.uiElements.map((el, i) => (
+   677→                      <Tooltip key={el.id}>
+   678→                        <TooltipTrigger asChild>
+   679→                          <div>
+   680→                            <DiffIndicator
+   681→                              current={el.visible}
+   682→                              base={compareMode ? baseSpec.uiElements[i].visible : el.visible}
+   683→                              label={el.label}
+   684→                            />
+   685→                          </div>
+   686→                        </TooltipTrigger>
+   687→                        <TooltipContent side="left" className="max-w-[250px] text-xs">
+   688→                          {el.description}
+   689→                        </TooltipContent>
+   690→                      </Tooltip>
+   691→                    ))}
+   692→                  </CollapsibleSection>
+   693→                </div>
+   694→
+   695→                {/* ── Matrix Visualization ── */}
+   696→                <Card>
+   697→                  <CardHeader className="pb-2">
+   698→                    <CardTitle className="text-sm flex items-center gap-2">
+   699→                      <LayoutDashboard className="h-4 w-4" />
+   700→                      Матрица кабинетов
+   701→                    </CardTitle>
+   702→                    <CardDescription className="text-[11px]">
+   703→                      Биллинг-тип × Сегмент = Конфигурация кабинета
+   704→                    </CardDescription>
+   705→                  </CardHeader>
+   706→                  <CardContent className="p-3">
+   707→                    <div className="overflow-x-auto">
+   708→                      <table className="w-full text-xs">
+   709→                        <thead>
+   710→                          <tr className="border-b">
+   711→                            <th className="text-left py-2 px-2 font-medium text-muted-foreground">
+   712→                              Биллинг \ Сегмент
+   713→                            </th>
+   714→                            <th className="text-center py-2 px-2 font-medium text-muted-foreground">
+   715→                              Самозанятые
+   716→                            </th>
+   717→                            <th className="text-center py-2 px-2 font-medium text-muted-foreground">
+   718→                              Микробизнес
+   719→                            </th>
+   720→                            <th className="text-center py-2 px-2 font-medium text-muted-foreground">
+   721→                              Бизнес
+   722→                            </th>
+   723→                          </tr>
+   724→                        </thead>
+   725→                        <tbody className="font-mono">
+   726→                          <tr className="border-b">
+   727→                            <td className="py-2 px-2 font-sans font-medium">Постпейд</td>
+   728→                            <td className="text-center py-2 px-2">
+   729→                              <Badge
+   730→                                className={`text-[10px] cursor-pointer transition-opacity ${
+   731→                                  activeCabinet === "postpaid"
+   732→                                    ? "opacity-100"
+   733→                                    : "opacity-60 hover:opacity-100"
+   734→                                } bg-emerald-600 text-white border-0`}
+   735→                                onClick={() => setActiveCabinet("postpaid")}
+   736→                              >
+   737→                                {activeCabinet === "postpaid" && <Check className="h-2.5 w-2.5 mr-1" />}
+   738→                                Постпейд
+   739→                              </Badge>
+   740→                            </td>
+   741→                            <td className="text-center py-2 px-2 text-muted-foreground">—</td>
+   742→                            <td className="text-center py-2 px-2 text-muted-foreground">—</td>
+   743→                          </tr>
+   744→                          <tr className="border-b">
+   745→                            <td className="py-2 px-2 font-sans font-medium">Препейд</td>
+   746→                            <td className="text-center py-2 px-2">
+   747→                              <Badge
+   748→                                className={`text-[10px] cursor-pointer transition-opacity ${
+   749→                                  activeCabinet === "prepaid"
+   750→                                    ? "opacity-100"
+   751→                                    : "opacity-60 hover:opacity-100"
+   752→                                } bg-sky-600 text-white border-0`}
+   753→                                onClick={() => setActiveCabinet("prepaid")}
+   754→                              >
+   755→                                {activeCabinet === "prepaid" && <Check className="h-2.5 w-2.5 mr-1" />}
+   756→                                Препейд
+   757→                              </Badge>
+   758→                            </td>
+   759→                            <td className="text-center py-2 px-2">
+   760→                              <Badge
+   761→                                className={`text-[10px] cursor-pointer transition-opacity ${
+   762→                                  activeCabinet === "micro_prepaid"
+   763→                                    ? "opacity-100"
+   764→                                    : "opacity-60 hover:opacity-100"
+   765→                                } bg-amber-600 text-white border-0`}
+   766→                                onClick={() => setActiveCabinet("micro_prepaid")}
+   767→                              >
+   768→                                {activeCabinet === "micro_prepaid" && (
+   769→                                  <Check className="h-2.5 w-2.5 mr-1" />
+   770→                                )}
+   771→                                Микро Препейд
+   772→                              </Badge>
+   773→                            </td>
+   774→                            <td className="text-center py-2 px-2 text-muted-foreground">—</td>
+   775→                          </tr>
+   776→                          <tr>
+   777→                            <td className="py-2 px-2 font-sans font-medium">Контракт</td>
+   778→                            <td className="text-center py-2 px-2 text-muted-foreground">—</td>
+   779→                            <td className="text-center py-2 px-2 text-muted-foreground">—</td>
+   780→                            <td className="text-center py-2 px-2 text-muted-foreground">—</td>
+   781→                          </tr>
+   782→                        </tbody>
+   783→                      </table>
+   784→                    </div>
+   785→                  </CardContent>
+   786→                </Card>
+   787→
+   788→                {/* ── Benefits Card ── */}
+   789→                <Card>
+   790→                  <CardHeader className="pb-2">
+   791→                    <CardTitle className="text-sm flex items-center gap-2">
+   792→                      <ArrowRight className="h-4 w-4 text-emerald-600" />
+   793→                      Преимущества подхода
+   794→                    </CardTitle>
+   795→                  </CardHeader>
+   796→                  <CardContent className="text-xs text-muted-foreground space-y-2">
+   797→                    <div className="flex gap-2">
+   798→                      <Check className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
+   799→                      <span>
+   800→                        <strong className="text-foreground">Единая точка правки</strong> — вместо 244
+   801→                        файлов все условия в одном конфиге
+   802→                      </span>
+   803→                    </div>
+   804→                    <div className="flex gap-2">
+   805→                      <Check className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
+   806→                      <span>
+   807→                        <strong className="text-foreground">Масштабируемость</strong> — новый тип кабинета
+   808→                        = новый файл конфигурации, без изменения кода
+   809→                      </span>
+   810→                    </div>
+   811→                    <div className="flex gap-2">
+   812→                      <Check className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
+   813→                      <span>
+   814→                        <strong className="text-foreground">Автотесты</strong> — конфиг используется для
+   815→                        генерации тест-кейсов
+   816→                      </span>
+   817→                    </div>
+   818→                    <div className="flex gap-2">
+   819→                      <Check className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
+   820→                      <span>
+   821→                        <strong className="text-foreground">Бэк-офис</strong> — конфиг можно вынести в
+   822→                        админку для менеджеров
+   823→                      </span>
+   824→                    </div>
+   825→                    <div className="flex gap-2">
+   826→                      <Check className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
+   827→                      <span>
+   828→                        <strong className="text-foreground">Низкая когнитивная нагрузка</strong> —
+   829→                        разработчику не нужно вникать в логику if-else
+   830→                      </span>
+   831→                    </div>
+   832→                  </CardContent>
+   833→                </Card>
+   834→              </div>
+   835→            )}
+   836→          </div>
+   837→
+   838→          {/* ── Interactive Toggles: Direct Config Editing ── */}
+   839→          <div className="mt-8">
+   840→            <Card>
+   841→              <CardHeader className="pb-2">
+   842→                <CardTitle className="text-sm flex items-center gap-2">
+   843→                  <Settings className="h-4 w-4" />
+   844→                  Интерактивная конфигурация
+   845→                </CardTitle>
+   846→                <CardDescription className="text-[11px]">
+   847→                  Переключайте элементы, чтобы увидеть, как конфигурационный файл
+   848→                  управляет отображением. Наведите на элемент, чтобы увидеть его описание.
+   849→                </CardDescription>
+   850→              </CardHeader>
+   851→              <CardContent>
+   852→                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+   853→                  {/* Routes toggles */}
+   854→                  <div className="space-y-2">
+   855→                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+   856→                      Доступ к роутам
+   857→                    </h4>
+   858→                    {currentSpec.routes.map((route) => (
+   859→                      <div
+   860→                        key={route.path}
+   861→                        className="flex items-center justify-between gap-3 py-1.5"
+   862→                      >
+   863→                        <div className="flex items-center gap-2 min-w-0">
+   864→                          {route.allowed ? (
+   865→                            <Unlock className="h-3.5 w-3.5 text-green-600 shrink-0" />
+   866→                          ) : (
+   867→                            <Lock className="h-3.5 w-3.5 text-red-400 shrink-0" />
+   868→                          )}
+   869→                          <span className="text-sm truncate">{route.label}</span>
+   870→                        </div>
+   871→                        <Badge
+   872→                          variant={route.allowed ? "default" : "outline"}
+   873→                          className="text-[10px] shrink-0"
+   874→                        >
+   875→                          {route.allowed ? "открыт" : "закрыт"}
+   876→                        </Badge>
+   877→                      </div>
+   878→                    ))}
+   879→                  </div>
+   880→
+   881→                  {/* Sections toggles */}
+   882→                  <div className="space-y-2">
+   883→                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+   884→                      Секции страницы
+   885→                    </h4>
+   886→                    {currentSpec.sections.map((section) => (
+   887→                      <div
+   888→                        key={section.id}
+   889→                        className="flex items-center justify-between gap-3 py-1.5"
+   890→                      >
+   891→                        <div className="flex items-center gap-2 min-w-0">
+   892→                          {section.visible ? (
+   893→                            <Eye className="h-3.5 w-3.5 text-green-600 shrink-0" />
+   894→                          ) : (
+   895→                            <EyeOff className="h-3.5 w-3.5 text-red-400 shrink-0" />
+   896→                          )}
+   897→                          <span className="text-sm truncate">{section.label}</span>
+   898→                        </div>
+   899→                        <Badge
+   900→                          variant={section.visible ? "default" : "outline"}
+   901→                          className="text-[10px] shrink-0"
+   902→                        >
+   903→                          {section.visible ? "видима" : "скрыта"}
+   904→                        </Badge>
+   905→                      </div>
+   906→                    ))}
+   907→                  </div>
+   908→
+   909→                  {/* UI Elements toggles */}
+   910→                  <div className="space-y-2">
+   911→                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+   912→                      UI-элементы
+   913→                    </h4>
+   914→                    {currentSpec.uiElements.map((el) => (
+   915→                      <Tooltip key={el.id}>
+   916→                        <TooltipTrigger asChild>
+   917→                          <div className="flex items-center justify-between gap-3 py-1.5 cursor-default">
+   918→                            <div className="flex items-center gap-2 min-w-0">
+   919→                              {el.visible ? (
+   920→                                <Eye className="h-3.5 w-3.5 text-green-600 shrink-0" />
+   921→                              ) : (
+   922→                                <EyeOff className="h-3.5 w-3.5 text-red-400 shrink-0" />
+   923→                              )}
+   924→                              <span className="text-sm truncate">{el.label}</span>
+   925→                            </div>
+   926→                            <Badge
+   927→                              variant={el.visible ? "default" : "outline"}
+   928→                              className="text-[10px] shrink-0"
+   929→                            >
+   930→                              {el.visible ? "вкл" : "выкл"}
+   931→                            </Badge>
+   932→                          </div>
+   933→                        </TooltipTrigger>
+   934→                        <TooltipContent side="left" className="max-w-[220px] text-xs">
+   935→                          {el.description}
+   936→                        </TooltipContent>
+   937→                      </Tooltip>
+   938→                    ))}
+   939→                  </div>
+   940→                </div>
+   941→              </CardContent>
+   942→            </Card>
+   943→          </div>
+   944→        </main>
+   945→
+   946→        {/* ── Footer ── */}
+   947→        <footer className="border-t bg-white mt-auto">
+   948→          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-xs text-muted-foreground">
+   949→            <span>Прототип на основе концепции Анатолия Тукова · 26.06.2026</span>
+   950→            <span>ЛК ОАТС · Архитектура фронтенда</span>
+   951→          </div>
+   952→        </footer>
+   953→      </div>
+   954→    </TooltipProvider>
+   955→  );
+   956→}
