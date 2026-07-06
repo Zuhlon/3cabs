@@ -30,6 +30,13 @@ import {
   ChevronDown,
   ChevronRight,
   Sparkles,
+  FlaskConical,
+  Rocket,
+  Wrench,
+  Shield,
+  BarChart3,
+  Users,
+  Puzzle,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -1399,6 +1406,116 @@ export default function Page() {
             </Card>
           </div>
         </main>
+
+        {/* ── Benefits Section ── */}
+        <section className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 pb-10">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+              Что даёт конфигурационный подход
+            </h2>
+            <p className="text-sm text-slate-500 max-w-xl mx-auto">
+              Переход от 800+ if-проверок к единому декларативному конфигу — это не просто рефакторинг, а качественный сдвиг в архитектуре
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* Card 1 — A/B Testing */}
+            <div className="group relative rounded-2xl bg-gradient-to-br from-violet-600 to-violet-800 p-6 text-white overflow-hidden shadow-lg shadow-violet-200 hover:shadow-xl hover:shadow-violet-300 transition-all duration-300 hover:-translate-y-1">
+              <div className="absolute -top-6 -right-6 h-32 w-32 rounded-full bg-white/10 group-hover:scale-125 transition-transform duration-500" />
+              <div className="relative">
+                <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
+                  <FlaskConical className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">A/B-тестирование</h3>
+                <p className="text-sm text-violet-100 leading-relaxed">
+                  Новый виджет, секция или роут добавляются в конфиг — и можно сразу
+                  включить для 10% пользователей, не трогая код. Фича-флаги встроены
+                  в архитектуру, а не прибиты гвоздями.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 2 — Scaling */}
+            <div className="group relative rounded-2xl bg-gradient-to-br from-sky-500 to-sky-700 p-6 text-white overflow-hidden shadow-lg shadow-sky-200 hover:shadow-xl hover:shadow-sky-300 transition-all duration-300 hover:-translate-y-1">
+              <div className="absolute -top-6 -right-6 h-32 w-32 rounded-full bg-white/10 group-hover:scale-125 transition-transform duration-500" />
+              <div className="relative">
+                <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
+                  <Rocket className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">Масштабирование</h3>
+                <p className="text-sm text-sky-100 leading-relaxed">
+                  Новый тип кабинета = новые значения в JSON. Не 244 файла с правками,
+                  а один блок конфигурации. Матрица billing × segment растётся
+                  свободно — от 3 кабинетов до 30 без переписывания логики.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3 — Maintenance savings */}
+            <div className="group relative rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 text-white overflow-hidden shadow-lg shadow-emerald-200 hover:shadow-xl hover:shadow-emerald-300 transition-all duration-300 hover:-translate-y-1">
+              <div className="absolute -top-6 -right-6 h-32 w-32 rounded-full bg-white/10 group-hover:scale-125 transition-transform duration-500" />
+              <div className="relative">
+                <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
+                  <Wrench className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">Экономия на поддержке</h3>
+                <p className="text-sm text-emerald-100 leading-relaxed">
+                  Один файл вместо разбросанных по 244 файлам проверок. Баг
+                  в отображении виджета правится в одном месте. Время на
+                  доработки сокращается в разы, а риск regression-ов стремится к нулю.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 4 — Safety */}
+            <div className="group relative rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 text-white overflow-hidden shadow-lg shadow-amber-200 hover:shadow-xl hover:shadow-amber-300 transition-all duration-300 hover:-translate-y-1">
+              <div className="absolute -top-6 -right-6 h-32 w-32 rounded-full bg-white/10 group-hover:scale-125 transition-transform duration-500" />
+              <div className="relative">
+                <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">Безопасность изменений</h3>
+                <p className="text-sm text-amber-100 leading-relaxed">
+                  Конфиг валидируется на этапе CI/CD — невалидный JSON не попадёт
+                  на прод. История изменений в Git даёт полный аудит: кто, когда
+                  и зачем включил или выключил фичу.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 5 — Analytics */}
+            <div className="group relative rounded-2xl bg-gradient-to-br from-rose-500 to-pink-700 p-6 text-white overflow-hidden shadow-lg shadow-rose-200 hover:shadow-xl hover:shadow-rose-300 transition-all duration-300 hover:-translate-y-1">
+              <div className="absolute -top-6 -right-6 h-32 w-32 rounded-full bg-white/10 group-hover:scale-125 transition-transform duration-500" />
+              <div className="relative">
+                <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
+                  <BarChart3 className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">Аналитика и мониторинг</h3>
+                <p className="text-sm text-rose-100 leading-relaxed">
+                  Каждый фича-флаг — точка измерения. Можно отслеживать, какие виджеты
+                  реально используются, сколько раз открывали отключённый роут,
+                  и принимать решения на основе данных, а не интуиции.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 6 — Team collaboration */}
+            <div className="group relative rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-800 p-6 text-white overflow-hidden shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 transition-all duration-300 hover:-translate-y-1">
+              <div className="absolute -top-6 -right-6 h-32 w-32 rounded-full bg-white/10 group-hover:scale-125 transition-transform duration-500" />
+              <div className="relative">
+                <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">Командная работа</h3>
+                <p className="text-sm text-indigo-100 leading-relaxed">
+                  Продакт-менеджер может менять конфиг через бэк-офис без участия
+                  разработчиков. Дизайнер видит матрицу кабинетов и понимает,
+                  что нужно отрисовать. Фронтендер сосредоточен на компонентах, а не на условиях.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* ── Footer ── */}
         <footer className="border-t bg-white mt-auto">
