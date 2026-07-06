@@ -894,7 +894,7 @@ export default function Page() {
                         {diffDetails.map((d, idx) => (
                           <div
                             key={idx}
-                            className="rounded-md bg-muted/50 border px-2.5 py-2 text-[11px] space-y-1"
+                            className="rounded-md bg-white border px-2.5 py-2 text-[11px] space-y-1"
                           >
                             <div className="flex items-center gap-1.5">
                               <span
