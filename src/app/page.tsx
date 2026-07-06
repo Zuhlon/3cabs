@@ -684,21 +684,62 @@ export default function Page() {
 
   const configJson = useMemo(() => generateConfigJSON(currentSpec), [currentSpec]);
 
-  // Count differences
-  const diffCount = useMemo(() => {
-    if (!compareMode) return 0;
-    let count = 0;
+  // Compute detailed diff list & count
+  const diffDetails = useMemo(() => {
+    if (!compareMode) return [];
+    const diffs: { category: string; id: string; label: string; currentVal: boolean; baseVal: boolean; jsonPath: string; currentLine: string; baseLine: string }[] = [];
+    currentSpec.routes.forEach((r, i) => {
+      const br = baseSpec.routes[i];
+      if (!br || r.allowed !== br.allowed) {
+        const path = `routes[${i}].allowed`;
+        diffs.push({
+          category: "routes",
+          id: r.path,
+          label: r.label,
+          currentVal: r.allowed,
+          baseVal: br?.allowed ?? false,
+          jsonPath: path,
+          currentLine: `  "${path}": ${r.allowed}`,
+          baseLine: `  "${path}": ${br?.allowed ?? false}`,
+        });
+      }
+    });
     currentSpec.sections.forEach((s, i) => {
-      if (s.visible !== baseSpec.sections[i].visible) count++;
+      const bs = baseSpec.sections[i];
+      if (!bs || s.visible !== bs.visible) {
+        const path = `sections[${i}].visible`;
+        diffs.push({
+          category: "sections",
+          id: s.id,
+          label: s.label,
+          currentVal: s.visible,
+          baseVal: bs?.visible ?? false,
+          jsonPath: path,
+          currentLine: `  "${path}": ${s.visible},  // ${s.label}`,
+          baseLine: `  "${path}": ${bs?.visible ?? false},  // ${bs?.label ?? s.label}`,
+        });
+      }
     });
     currentSpec.uiElements.forEach((u, i) => {
-      if (u.visible !== baseSpec.uiElements[i].visible) count++;
+      const bu = baseSpec.uiElements[i];
+      if (!bu || u.visible !== bu.visible) {
+        const path = `uiElements[${i}].visible`;
+        diffs.push({
+          category: "uiElements",
+          id: u.id,
+          label: u.label,
+          currentVal: u.visible,
+          baseVal: bu?.visible ?? false,
+          jsonPath: path,
+          currentLine: `  "${path}": ${u.visible},  // ${u.label}`,
+          baseLine: `  "${path}": ${bu?.visible ?? false},  // ${bu?.label ?? u.label}`,
+        });
+      }
     });
-    currentSpec.routes.forEach((r, i) => {
-      if (r.allowed !== baseSpec.routes[i].allowed) count++;
-    });
-    return count;
+    return diffs;
   }, [currentSpec, baseSpec, compareMode]);
+
+  const diffCount = diffDetails.length;
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -834,9 +875,54 @@ export default function Page() {
                     ))}
                   </div>
                 </div>
-                <Badge variant="outline" className="text-xs">
-                  {diffCount} {diffCount === 1 ? "различие" : diffCount < 5 ? "различия" : "различий"}
-                </Badge>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="text-xs cursor-help">
+                      {diffCount} {diffCount === 1 ? "различие" : diffCount < 5 ? "различия" : "различий"}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="bottom"
+                    align="end"
+                    className="max-w-[480px] p-0"
+                  >
+                    <div className="px-3 py-2.5">
+                      <div className="text-xs font-semibold text-muted-foreground mb-2">
+                        {currentSpec.title} vs {baseSpec.title}
+                      </div>
+                      <div className="space-y-1.5 max-h-[340px] overflow-y-auto">
+                        {diffDetails.map((d, idx) => (
+                          <div
+                            key={idx}
+                            className="rounded-md bg-muted/50 border px-2.5 py-2 text-[11px] space-y-1"
+                          >
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className={
+                                  d.currentVal
+                                    ? "inline-block h-2 w-2 rounded-full bg-emerald-500"
+                                    : "inline-block h-2 w-2 rounded-full bg-red-400"
+                                }
+                              />
+                              <span className="font-mono font-medium text-foreground">
+                                {d.label}
+                              </span>
+                              <span className="text-muted-foreground ml-auto font-mono">
+                                {d.category}
+                              </span>
+                            </div>
+                            <div className="font-mono leading-relaxed">
+                              <span className="text-red-500">− {d.baseLine}</span>
+                            </div>
+                            <div className="font-mono leading-relaxed">
+                              <span className="text-emerald-600">+ {d.currentLine}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
               </>
             )}
 
