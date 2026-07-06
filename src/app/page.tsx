@@ -29,11 +29,12 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type CabinetType = "postpaid" | "micro_prepaid" | "prepaid";
+type CabinetType = "postpaid" | "micro_prepaid" | "prepaid" | "full";
 
 interface RouteConfig {
   path: string;
@@ -71,6 +72,44 @@ interface CabinetSpec {
 // ─── Cabinet Specifications (Tolya's concept) ────────────────────────────────
 
 const CABINET_SPECS: CabinetSpec[] = [
+  {
+    key: "full",
+    title: "Полный кабинет (демо)",
+    subtitle: "Все возможности · Демонстрация конфига",
+    billingType: "all",
+    segment: "all",
+    routes: [
+      { path: "/dashboard", label: "Главная / Дашборд", allowed: true },
+      { path: "/statistics", label: "Статистика", allowed: true },
+      { path: "/services", label: "Услуги и тарифы", allowed: true },
+      { path: "/payments", label: "Платежи и счета", allowed: true },
+      { path: "/support", label: "Поддержка", allowed: true },
+      { path: "/settings", label: "Настройки", allowed: true },
+      { path: "/api-docs", label: "API-документация", allowed: true },
+      { path: "/*", label: "Все остальные роуты", allowed: true },
+    ],
+    sections: [
+      { id: "balance-widget", label: "Виджет баланса", visible: true },
+      { id: "traffic-chart", label: "График трафика", visible: true },
+      { id: "services-grid", label: "Сетка услуг", visible: true },
+      { id: "payment-history", label: "История платежей", visible: true },
+      { id: "notifications", label: "Уведомления", visible: true },
+      { id: "quick-actions", label: "Быстрые действия", visible: true },
+      { id: "promo-banner", label: "Промо-баннер", visible: true },
+      { id: "tariff-details", label: "Детали тарифа", visible: true },
+    ],
+    uiElements: [
+      { id: "btn-top-up", label: "Кнопка \u00ABПополнить\u00BB", visible: true, description: "Доступна и для постпейда (автопополнение), и для препейда" },
+      { id: "btn-auto-pay", label: "Автоплатёж", visible: true, description: "Доступен на всех тарифах" },
+      { id: "link-invoices", label: "Ссылка на счета", visible: true, description: "Показывается на постпейде, а на препейде — история платежей" },
+      { id: "link-statistics", label: "Раздел статистики", visible: true, description: "Полная аналитика для всех типов кабинетов" },
+      { id: "block-usage", label: "Блок потребления", visible: true, description: "Текущее потребление минут/ГБ/СМС + остаток пакета" },
+      { id: "block-balance", label: "Блок баланса", visible: true, description: "Баланс и задолженность (постпейд) или остаток (препейд)" },
+    ],
+    image: null,
+    accentColor: "bg-violet-600",
+    bgColor: "bg-violet-50 border-violet-200",
+  },
   {
     key: "postpaid",
     title: "Стандартный кабинет",
@@ -282,6 +321,137 @@ function CollapsibleSection({
   );
 }
 
+// ─── Full Cabinet Preview (composite) ───────────────────────────────────────
+
+function FullCabinetPreview() {
+  return (
+    <div className="bg-gradient-to-b from-slate-50 to-white p-0">
+      {/* Simulated header bar */}
+      <div className="bg-slate-800 text-white px-4 py-2.5 flex items-center gap-3">
+        <div className="h-6 w-6 rounded bg-violet-500 flex items-center justify-center">
+          <LayoutDashboard className="h-3.5 w-3.5 text-white" />
+        </div>
+        <span className="text-sm font-medium">Личный кабинет</span>
+        <div className="flex-1" />
+        <Badge className="bg-violet-500 text-white border-0 text-[10px] gap-1">
+          <Sparkles className="h-3 w-3" /> Все возможности
+        </Badge>
+      </div>
+
+      <div className="p-4 space-y-3">
+        {/* Balance + Usage row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+            <p className="text-[10px] text-emerald-600 font-medium uppercase tracking-wider mb-1">Баланс</p>
+            <p className="text-lg font-bold text-emerald-800">12 450 ₽</p>
+            <p className="text-[10px] text-emerald-600/70 mt-0.5">Задолженность: 0 ₽</p>
+          </div>
+          <div className="bg-sky-50 border border-sky-200 rounded-lg p-3">
+            <p className="text-[10px] text-sky-600 font-medium uppercase tracking-wider mb-1">Потребление</p>
+            <div className="grid grid-cols-3 gap-1 mt-1">
+              <div className="text-center">
+                <p className="text-sm font-bold text-sky-800">87</p>
+                <p className="text-[9px] text-sky-500">мин</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-bold text-sky-800">4.2</p>
+                <p className="text-[9px] text-sky-500">ГБ</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-bold text-sky-800">23</p>
+                <p className="text-[9px] text-sky-500">СМС</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick actions */}
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { label: "Пополнить", color: "bg-amber-100 text-amber-700 border-amber-200" },
+            { label: "Автоплатёж", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+            { label: "Счета", color: "bg-sky-100 text-sky-700 border-sky-200" },
+            { label: "Статистика", color: "bg-violet-100 text-violet-700 border-violet-200" },
+          ].map((action) => (
+            <div
+              key={action.label}
+              className={`rounded-lg border p-2 text-center text-[10px] font-medium ${action.color}`}
+            >
+              {action.label}
+            </div>
+          ))}
+        </div>
+
+        {/* Traffic chart placeholder */}
+        <div className="bg-white border border-slate-200 rounded-lg p-3">
+          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-2">График трафика</p>
+          <div className="h-20 flex items-end gap-1.5 px-2">
+            {[40, 65, 45, 80, 55, 70, 90, 60, 75, 50, 85, 95].map((h, i) => (
+              <div
+                key={i}
+                className="flex-1 bg-gradient-to-t from-violet-400 to-violet-200 rounded-t-sm"
+                style={{ height: `${h}%` }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Promo banner */}
+        <div className="bg-gradient-to-r from-violet-500 to-purple-500 rounded-lg p-3 text-white">
+          <p className="text-[10px] font-medium opacity-80">Промо-акция</p>
+          <p className="text-xs font-bold">Подключите автоплатёж и получите +500 ₽ на счёт</p>
+        </div>
+
+        {/* Services grid */}
+        <div className="bg-white border border-slate-200 rounded-lg p-3">
+          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-2">Услуги и тарифы</p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { name: "Тариф «Оптимальный»", price: "590 ₽/мес", active: true },
+              { name: "Доп. пакет минут", price: "200 ₽", active: true },
+              { name: "Доп. пакет ГБ", price: "150 ₽", active: true },
+              { name: "API-доступ", price: "Бесплатно", active: true },
+            ].map((svc) => (
+              <div key={svc.name} className="flex items-center justify-between bg-slate-50 rounded-md px-2.5 py-1.5">
+                <span className="text-[10px] text-slate-700">{svc.name}</span>
+                <Badge variant="outline" className="text-[9px] px-1 py-0 text-green-600 border-green-200 bg-green-50">
+                  {svc.price}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Payment history */}
+        <div className="bg-white border border-slate-200 rounded-lg p-3">
+          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-2">История платежей</p>
+          {[
+            { date: "26.06.2026", desc: "Пополнение", amount: "+1 000 ₽", color: "text-green-600" },
+            { date: "20.06.2026", desc: "Абонентская плата", amount: "-590 ₽", color: "text-red-500" },
+            { date: "15.06.2026", desc: "Пополнение", amount: "+2 000 ₽", color: "text-green-600" },
+          ].map((p) => (
+            <div key={p.date + p.desc} className="flex items-center justify-between py-1 border-b border-slate-50 last:border-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground">{p.date}</span>
+                <span className="text-[10px]">{p.desc}</span>
+              </div>
+              <span className={`text-[10px] font-medium ${p.color}`}>{p.amount}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Legend badge */}
+        <div className="text-center">
+          <Badge variant="outline" className="text-[10px] gap-1 bg-violet-50 border-violet-200 text-violet-700">
+            <Sparkles className="h-3 w-3" />
+            Все виджеты всех кабинетов активны в cabinet-config.json
+          </Badge>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ──────────────────────────────────────────────────────────────
 
 export default function Page() {
@@ -388,7 +558,7 @@ export default function Page() {
           </Card>
 
           {/* ── Cabinet Selector ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             {CABINET_SPECS.map((spec) => (
               <button
                 key={spec.key}
@@ -485,35 +655,38 @@ export default function Page() {
                       </CardDescription>
                     </div>
                     <Badge className={`${currentSpec.accentColor} text-white`}>
-                      {currentSpec.billingType === "postpaid" ? "Постпейд" : "Препейд"}
+                      {currentSpec.billingType === "all" ? "Все возможности" : currentSpec.billingType === "postpaid" ? "Постпейд" : "Препейд"}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="relative bg-slate-100">
-                    <img
-                      src={currentSpec.image}
-                      alt={currentSpec.title}
-                      className="w-full h-auto"
-                      loading="eager"
-                    />
-                    {/* Overlay labels */}
-                    <div className="absolute top-3 left-3">
-                      <Badge className="bg-black/70 text-white backdrop-blur-sm border-0 text-[11px]">
-                        Дизайн-макет кабинета
-                      </Badge>
+                  {currentSpec.image ? (
+                    <div className="relative bg-slate-100">
+                      <img
+                        src={currentSpec.image}
+                        alt={currentSpec.title}
+                        className="w-full h-auto"
+                        loading="eager"
+                      />
+                      <div className="absolute top-3 left-3">
+                        <Badge className="bg-black/70 text-white backdrop-blur-sm border-0 text-[11px]">
+                          Дизайн-макет кабинета
+                        </Badge>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <FullCabinetPreview />
+                  )}
                 </CardContent>
               </Card>
 
-              {/* ── Comparison: 3 images side by side (mobile-friendly) ── */}
+              {/* ── Comparison: all cabinets side by side (mobile-friendly) ── */}
               <div className="mt-6">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4" />
-                  Все три варианта кабинетов
+                  Все варианты кабинетов
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {CABINET_SPECS.map((spec) => (
                     <button
                       key={spec.key}
@@ -525,12 +698,19 @@ export default function Page() {
                       }`}
                     >
                       <div className="relative">
-                        <img
-                          src={spec.image}
-                          alt={spec.title}
-                          className="w-full h-auto"
-                          loading="lazy"
-                        />
+                        {spec.image ? (
+                          <img
+                            src={spec.image}
+                            alt={spec.title}
+                            className="w-full h-auto"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="bg-gradient-to-br from-violet-50 to-violet-100 h-40 flex flex-col items-center justify-center p-3">
+                            <Sparkles className="h-8 w-8 text-violet-400 mb-2" />
+                            <span className="text-[10px] text-violet-600 font-medium text-center">Все виджеты включены</span>
+                          </div>
+                        )}
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
                           <p className="text-white text-xs font-semibold">{spec.title}</p>
                           <p className="text-white/70 text-[10px]">{spec.subtitle}</p>
@@ -734,11 +914,28 @@ export default function Page() {
                             </td>
                             <td className="text-center py-2 px-2 text-muted-foreground">—</td>
                           </tr>
-                          <tr>
+                          <tr className="border-b">
                             <td className="py-2 px-2 font-sans font-medium">Контракт</td>
                             <td className="text-center py-2 px-2 text-muted-foreground">—</td>
                             <td className="text-center py-2 px-2 text-muted-foreground">—</td>
                             <td className="text-center py-2 px-2 text-muted-foreground">—</td>
+                          </tr>
+                          <tr className="bg-violet-50/50">
+                            <td className="py-2 px-2 font-sans font-medium text-violet-700">Все (демо)</td>
+                            <td colSpan={3} className="text-center py-2 px-2">
+                              <Badge
+                                className={`text-[10px] cursor-pointer transition-opacity gap-1 ${
+                                  activeCabinet === "full"
+                                    ? "opacity-100"
+                                    : "opacity-60 hover:opacity-100"
+                                } bg-violet-600 text-white border-0`}
+                                onClick={() => setActiveCabinet("full")}
+                              >
+                                {activeCabinet === "full" && <Check className="h-2.5 w-2.5 mr-1" />}
+                                <Sparkles className="h-2.5 w-2.5" />
+                                Полный кабинет
+                              </Badge>
+                            </td>
                           </tr>
                         </tbody>
                       </table>
